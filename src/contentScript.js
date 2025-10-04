@@ -40,6 +40,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
 });
 
+// Ensure content script is properly initialized by sending a status message to console
+console.log('Additional Miniplayer content script loaded and ready to receive messages.');
+
 // Function to get a title for the video (try different strategies)
 function getVideoTitle(video) {
     // Try to get title from surrounding context
