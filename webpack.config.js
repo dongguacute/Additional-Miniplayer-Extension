@@ -2,6 +2,7 @@ const path = require('path');
 const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
+  mode: 'production',
   entry: {
     content: './content.js'
   },
@@ -14,7 +15,7 @@ module.exports = {
     new CopyPlugin({
       patterns: [
         { from: 'manifest.json', to: 'manifest.json' },
-        { from: 'icon.svg', to: 'icon.svg' }
+        { from: 'icon.png', to: 'icon.png' }
       ]
     })
   ]
