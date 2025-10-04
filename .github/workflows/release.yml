@@ -1,0 +1,104 @@
+name: Build and Release Chrome Extension
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Extract tag version
+      id: extract_version
+      run: |
+        VERSION=${GITHUB_REF#refs/tags/}
+        echo "VERSION=${VERSION}" >> $GITHUB_ENV
+        echo "Extracted version: $VERSION"
+
+    - name: Update manifest.json version
+      run: |
+        # Install jq for JSON manipulation
+        sudo apt-get update
+        sudo apt-get install -y jq
+        
+        # Update version in manifest.json
+        jq '.version = "${{ env.VERSION }}"' public/manifest.json > temp.json
+        mv temp.json public/manifest.json
+        
+        # Show updated manifest
+        cat public/manifest.json
+
+    - name: Build extension
+      run: |
+        # Check if build command exists in package.json
+        if npm run build --dry-run > /dev/null 2>&1; then
+          npm run build
+        else
+          echo "Build command not found in package.json, copying public directory"
+          mkdir -p dist
+          cp -r public/* dist/
+        fi
+
+    - name: Install crx package
+      run: npm install -g crx
+
+    - name: Create PEM file from secret
+      run: |
+        echo "${{ secrets.WEB_EXT_PRIVATE_KEY }}" > extension.pem
+
+    - name: Create Chrome Extension Package
+      run: |
+        # Wait for build directory to be created
+        sleep 2
+        
+        # Check if build directory exists after build
+        if [ -d "build" ]; then
+          # Use the build directory as the extension source
+          cd build
+          zip -r ../Additional-Miniplayer-${{ env.VERSION }}.zip . -x "*.DS_Store" "__MACOSX/*"
+          cd ..
+          
+          # Use crx to create CRX file from build directory
+          crx pack build -o Additional-Miniplayer-${{ env.VERSION }}.crx --private-key extension.pem
+        else
+          echo "Build directory not found, using public directory instead"
+          # Create a zip of the public directory
+          cd public
+          zip -r ../Additional-Miniplayer-${{ env.VERSION }}.zip . -x "*.DS_Store" "__MACOSX/*"
+          cd ..
+          
+          # Use crx to create CRX file from public directory
+          crx pack public -o Additional-Miniplayer-${{ env.VERSION }}.crx --private-key extension.pem
+        fi
+
+    - name: Upload CRX to release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./Additional-Miniplayer-${{ env.VERSION }}.crx
+        asset_name: Additional-Miniplayer-${{ env.VERSION }}.crx
+        asset_content_type: application/octet-stream
+
+    - name: Upload ZIP to release
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ github.event.release.upload_url }}
+        asset_path: ./Additional-Miniplayer-${{ env.VERSION }}.zip
+        asset_name: Additional-Miniplayer-${{ env.VERSION }}.zip
+        asset_content_type: application/zip
