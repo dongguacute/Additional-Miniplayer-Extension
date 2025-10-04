@@ -1,0 +1,17 @@
+{
+  "manifest_version": 3,
+  "name": "Additional-Miniplayer",
+  "version": "0.1.0",
+  "description": "✨This is a script that allows all videos on Chrome to have Miniplayer functionality✨",
+  "permissions": [],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "action": {
+    "default_title": "Additional-Miniplayer"
+  }
+}

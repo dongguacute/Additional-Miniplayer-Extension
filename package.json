@@ -1,0 +1,15 @@
+{
+  "name": "Additional-Miniplayer",
+  "version": "0.1.0",
+  "description": "✨This is a script that allows all videos on Chrome to have Miniplayer functionality✨",
+  "private": true,
+  "scripts": {
+    "watch": "webpack --mode=development --watch",
+    "build": "webpack --mode=production"
+  },
+  "devDependencies": {
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4",
+    "copy-webpack-plugin": "^11.0.0"
+  }
+}
