@@ -121,11 +121,37 @@ function updateButtonPositionForVideo(video) {
     }
 }
 
+// Function to check if a video element is valid for miniplayer
+function isValidVideoForMiniplayer(video) {
+    // Must have a source
+    if (!video.currentSrc && !video.src) {
+        return false;
+    }
+
+    // Must be visible and have dimensions
+    if (video.offsetWidth === 0 || video.offsetHeight === 0) {
+        return false;
+    }
+
+    // Must not be hidden
+    const style = window.getComputedStyle(video);
+    if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
+        return false;
+    }
+
+    // Must have some content loaded (readyState > 0 means metadata loaded)
+    if (video.readyState === 0 && !video.src) {
+        return false;
+    }
+
+    return true;
+}
+
 // Function to update button visibility based on video presence
 function updateButtonVisibility() {
     const videos = document.querySelectorAll('video');
     videos.forEach(video => {
-        if (video.currentSrc || video.src) { // Only show button if video has a source
+        if (isValidVideoForMiniplayer(video)) {
             if (!video.miniplayerButton) {
                 createMiniplayerButtonForVideo(video);
             }
