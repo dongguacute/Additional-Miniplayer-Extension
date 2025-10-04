@@ -1,7 +1,6 @@
-(function() {
-    'use strict';
+'use strict';
 
-    let buttonCounter = 0;
+let buttonCounter = 0;
 
     // Function to add miniplayer button to a video element
     function addMiniplayerButton(video) {
@@ -113,4 +112,3 @@
         childList: true,
         subtree: true
     });
-})();

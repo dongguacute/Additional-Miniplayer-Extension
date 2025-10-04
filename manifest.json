@@ -1,5 +1,6 @@
 {
   "manifest_version": 3,
+  "id": "additional-miniplayer@dgct.cc",
   "name": "Additional-Miniplayer",
   "version": "0.1.0",
   "description": "✨This is a script that allows all videos on Chrome to have Miniplayer functionality✨",
@@ -15,7 +16,7 @@
       "matches": ["<all_urls>"],
       "js": ["content.js"],
       "run_at": "document_end",
-      "type": "classic"
+      "type": "module"
     }
   ],
   "action": {
