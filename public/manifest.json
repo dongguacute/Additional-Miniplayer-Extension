@@ -26,6 +26,9 @@
       "run_at": "document_idle",
       "js": [
         "contentScript.js"
+      ],
+      "css": [
+        "miniplayer.css"
       ]
     }
   ]

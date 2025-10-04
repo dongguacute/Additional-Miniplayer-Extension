@@ -2,32 +2,17 @@
 
 let miniplayerButton = null;
 
+
 // Function to create the miniplayer button if it doesn't exist
 function createMiniplayerButton() {
     if (miniplayerButton) return;
     miniplayerButton = document.createElement('button');
     miniplayerButton.className = 'miniplayer-btn';
     miniplayerButton.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="2" y="2" width="10" height="8" rx="1" ry="1" fill="white" stroke="black" stroke-width="1.5"/>
-        <rect x="6" y="6" width="8" height="6" rx="1" ry="1" fill="white" stroke="black" stroke-width="1.5"/>
+        <rect x="2" y="2" width="10" height="8" rx="1" ry="1" fill="white" stroke="white" stroke-width="1.2"/>
+        <rect x="6" y="6" width="8" height="6" rx="1" ry="1" fill="white" stroke="white" stroke-width="1.2"/>
     </svg>`; // Miniplayer icon with overlapping rectangles
-    miniplayerButton.style.cssText = `
-        position: fixed;
-        z-index: 1000000;
-        background: white;
-        border: 1px solid #ccc;
-        border-radius: 3px;
-        width: 24px;
-        height: 24px;
-        cursor: pointer;
-        font-size: 14px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        opacity: 0.7;
-        pointer-events: auto;
-        display: none; /* Initially hidden */
-    `;
+    miniplayerButton.className = 'miniplayer-btn'; // Use CSS class instead of inline styles
 
     // Add click event
     miniplayerButton.addEventListener('click', function(e) {

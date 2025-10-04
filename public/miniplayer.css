@@ -1,0 +1,47 @@
+.miniplayer-btn {
+  position: fixed;
+  z-index: 1000000;
+ background: rgba(0, 0, 0, 0.6);
+  border: none;
+  border-radius: 4px;
+ width: 36px;
+  height: 36px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  pointer-events: auto;
+  transition: all 0.2s ease;
+  display: none; /* Initially hidden */
+  color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.miniplayer-btn:hover {
+ opacity: 1;
+  background: rgba(0, 0, 0, 0.8);
+  transform: scale(1.05);
+}
+
+.miniplayer-btn:active {
+  transform: scale(0.95);
+}
+
+.miniplayer-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.miniplayer-btn svg path,
+.miniplayer-btn svg rect,
+.miniplayer-btn svg circle {
+  stroke: white;
+  stroke-width: 1.5;
+  fill: none;
+}
+
+.miniplayer-btn svg g {
+  stroke: white;
+  fill: none;
+}
