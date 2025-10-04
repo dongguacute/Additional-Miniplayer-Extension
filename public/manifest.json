@@ -3,7 +3,7 @@
   "name": "Additional Miniplayer",
   "$schema": "https://json.schemastore.org/chrome-manifest.json",
   "version": "0.0.0",
-  "description": "My Chrome Extension",
+  "description": "✨This is a script that allows all videos on Chrome to have Miniplayer functionality✨",
   "icons": {
     "16": "icons/icon.png",
     "32": "icons/icon.png",

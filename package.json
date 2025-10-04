@@ -1,7 +1,7 @@
 {
   "name": "Additional-Miniplayer",
   "version": "0.0.0",
-  "description": "My Chrome Extension",
+  "description": "✨This is a script that allows all videos on Chrome to have Miniplayer functionality✨",
   "private": true,
   "scripts": {
     "watch": "node ./node_modules/webpack/bin/webpack.js --mode=development --watch --config config/webpack.config.js",
