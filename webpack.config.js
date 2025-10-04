@@ -11,6 +11,9 @@ module.exports = {
     filename: '[name].js',
     clean: true
   },
+  optimization: {
+    minimize: false
+  },
   plugins: [
     new CopyPlugin({
       patterns: [
