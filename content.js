@@ -47,21 +47,26 @@ function createMiniplayerButton() {
     document.body.appendChild(miniplayerButton);
 }
 
-// Function to update button visibility based on video presence
-function updateButtonVisibility() {
-    const videos = document.querySelectorAll('video');
-    if (videos.length > 0) {
-        // Position near the first video
-        const video = videos[0];
+// Function to update button position
+function updateButtonPosition() {
+    if (miniplayerButton.style.display === 'none') return;
+    const video = document.querySelector('video');
+    if (video) {
         let container = video.closest('#movie_player') || video.closest('#player') || video.closest('.html5-video-player') || video.parentNode;
         const rect = container.getBoundingClientRect();
         if (rect.width > 0 && rect.height > 0) {
             miniplayerButton.style.left = (rect.left + 5) + 'px';
             miniplayerButton.style.top = (rect.top + 5) + 'px';
-            miniplayerButton.style.display = 'flex';
-        } else {
-            miniplayerButton.style.display = 'none';
         }
+    }
+}
+
+// Function to update button visibility based on video presence
+function updateButtonVisibility() {
+    const videos = document.querySelectorAll('video');
+    if (videos.length > 0) {
+        miniplayerButton.style.display = 'flex';
+        updateButtonPosition();
     } else {
         miniplayerButton.style.display = 'none';
     }
@@ -112,3 +117,6 @@ observer.observe(document.body, {
 // Update position on scroll and resize
 window.addEventListener('scroll', updateButtonVisibility);
 window.addEventListener('resize', updateButtonVisibility);
+
+// Update position every 0.1 seconds to handle dynamic changes like dragging
+setInterval(updateButtonPosition, 100);
