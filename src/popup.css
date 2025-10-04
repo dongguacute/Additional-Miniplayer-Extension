@@ -98,6 +98,14 @@
   background-color: #45a049;
 }
 
+.open-miniplayer-btn.active {
+  background-color: #2196F3;
+}
+
+.open-miniplayer-btn.active:hover {
+  background-color: #1976D2;
+}
+
 .open-miniplayer-btn svg {
   width: 18px;
   height: 18px;

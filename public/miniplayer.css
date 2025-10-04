@@ -28,6 +28,15 @@
   transform: scale(0.95);
 }
 
+.miniplayer-btn.active {
+  background: rgba(33, 150, 243, 0.8);
+  opacity: 1;
+}
+
+.miniplayer-btn.active:hover {
+  background: rgba(33, 150, 243, 0.9);
+}
+
 .miniplayer-btn svg {
   width: 16px;
   height: 16px;

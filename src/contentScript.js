@@ -3,17 +3,20 @@
 // Listen for messages from popup
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.type === 'GET_VIDEOS') {
-        // Get all videos on the page and return their info
-        const videos = Array.from(document.querySelectorAll('video')).map(video => {
-            return {
-                src: video.currentSrc || video.src || '',
-                title: getVideoTitle(video),
-                duration: video.duration || 0,
-                currentTime: video.currentTime || 0,
-                paused: video.paused
-            };
-        });
-        
+        // Get all valid videos on the page and return their info
+        const videos = Array.from(document.querySelectorAll('video'))
+            .filter(video => isValidVideoForMiniplayer(video))
+            .map(video => {
+                return {
+                    src: video.currentSrc || video.src || '',
+                    title: getVideoTitle(video),
+                    duration: video.duration || 0,
+                    currentTime: video.currentTime || 0,
+                    paused: video.paused,
+                    isInPictureInPicture: document.pictureInPictureElement === video
+                };
+            });
+
         sendResponse({ videos });
     } else if (request.type === 'OPEN_MINIPLAYER') {
         // Find the video with the given src and activate Picture-in-Picture
@@ -67,18 +70,26 @@ function getVideoTitle(video) {
     return '视频';
 }
 
+// Function to update miniplayer button state
+function updateMiniplayerButtonState(button, video) {
+    if (document.pictureInPictureElement === video) {
+        button.classList.add('active');
+    } else {
+        button.classList.remove('active');
+    }
+}
+
 // Function to create a miniplayer button for a specific video element
 function createMiniplayerButtonForVideo(video) {
     // Check if button already exists for this video
     if (video.miniplayerButton) return;
-    
+
     const button = document.createElement('button');
     button.className = 'miniplayer-btn';
     button.innerHTML = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
         <rect x="2" y="2" width="10" height="8" rx="1" ry="1" fill="white" stroke-width="1.2"/>
         <rect x="6" y="6" width="8" height="6" rx="1" ry="1" fill="white" stroke="white" stroke-width="1.2"/>
     </svg>`; // Miniplayer icon with overlapping rectangles
-    button.className = 'miniplayer-btn'; // Use CSS class instead of inline styles
 
     // Add click event
     button.addEventListener('click', function(e) {
@@ -93,12 +104,15 @@ function createMiniplayerButtonForVideo(video) {
 
     // Store reference to button on video element
     video.miniplayerButton = button;
-    
+
     // Add to body
     document.body.appendChild(button);
-    
+
     // Position the button near the video
     updateButtonPositionForVideo(video);
+
+    // Initial state update
+    updateMiniplayerButtonState(button, video);
 }
 
 // Function to remove miniplayer button for a specific video element
@@ -128,22 +142,28 @@ function isValidVideoForMiniplayer(video) {
         return false;
     }
 
-    // Must be visible and have dimensions
-    if (video.offsetWidth === 0 || video.offsetHeight === 0) {
-        return false;
-    }
-
     // Must not be hidden
     const style = window.getComputedStyle(video);
-    if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
+    if (style.display === 'none' || style.visibility === 'hidden') {
         return false;
     }
 
-    // Must have some content loaded (readyState > 0 means metadata loaded)
-    if (video.readyState === 0 && !video.src) {
+    return true;
+}
+
+// Function to check if a video element should show miniplayer button
+function shouldShowMiniplayerButton(video) {
+    // Must pass basic validation
+    if (!isValidVideoForMiniplayer(video)) {
         return false;
     }
 
+    // Must have some dimensions (but allow very small videos that might be loading)
+    if (video.offsetWidth === 0 && video.offsetHeight === 0) {
+        return false;
+    }
+
+    // Allow videos that are loading or have content
     return true;
 }
 
@@ -151,7 +171,7 @@ function isValidVideoForMiniplayer(video) {
 function updateButtonVisibility() {
     const videos = document.querySelectorAll('video');
     videos.forEach(video => {
-        if (isValidVideoForMiniplayer(video)) {
+        if (shouldShowMiniplayerButton(video)) {
             if (!video.miniplayerButton) {
                 createMiniplayerButtonForVideo(video);
             }
@@ -228,3 +248,20 @@ setInterval(() => {
         }
     });
 }, 100);
+
+// Listen for Picture-in-Picture state changes to update button states
+document.addEventListener('enterpictureinpicture', (event) => {
+    document.querySelectorAll('video').forEach(video => {
+        if (video.miniplayerButton) {
+            updateMiniplayerButtonState(video.miniplayerButton, video);
+        }
+    });
+});
+
+document.addEventListener('leavepictureinpicture', (event) => {
+    document.querySelectorAll('video').forEach(video => {
+        if (video.miniplayerButton) {
+            updateMiniplayerButtonState(video.miniplayerButton, video);
+        }
+    });
+});
