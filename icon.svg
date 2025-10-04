@@ -1,0 +1,6 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Main video window -->
+  <rect x="12" y="12" width="88" height="66" rx="12" ry="12" fill="#4285f4" stroke="#ffffff" stroke-width="3"/>
+  <!-- Miniplayer window -->
+  <rect x="68" y="68" width="48" height="36" rx="8" ry="8" fill="#34a853" stroke="#ffffff" stroke-width="3"/>
+</svg>
