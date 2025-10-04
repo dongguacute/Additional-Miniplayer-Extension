@@ -17,7 +17,9 @@
     "default_title": "Additional Miniplayer",
     "default_popup": "popup.html"
   },
-  "permissions": [],
+  "permissions": [
+    "activeTab"
+  ],
   "content_scripts": [
     {
       "matches": [
