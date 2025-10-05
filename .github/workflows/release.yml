@@ -55,10 +55,15 @@ jobs:
     - name: Add public key to manifest
       run: |
         # Extract public key from PEM and add to manifest using Node.js
-        node -e "const fs = require('fs'); const crypto = require('crypto'); try { const key = fs.readFileSync('extension.pem'); const pub = crypto.createPublicKey(key).export({type:'spki', format:'der'}); fs.writeFileSync('pubkey.txt', pub.toString('base64')); } catch (e) { console.error('Error extracting public key:', e.message); process.exit(1); }"
-        jq --arg key "$(cat pubkey.txt)" '.key = $key' build/manifest.json > temp.json
-        mv temp.json build/manifest.json
-        cat build/manifest.json
+        if [ -f "extension.pem" ]; then
+          node -e "const fs = require('fs'); const crypto = require('crypto'); try { const key = fs.readFileSync('extension.pem'); const pub = crypto.createPublicKey(key).export({type:'spki', format:'der'}); fs.writeFileSync('pubkey.txt', pub.toString('base64')); } catch (e) { console.error('Error extracting public key:', e.message); process.exit(1); }"
+          jq --arg key "$(cat pubkey.txt)" '.key = $key' build/manifest.json > temp.json
+          mv temp.json build/manifest.json
+          cat build/manifest.json
+        else
+          echo "Private key file not found, skipping key addition"
+        fi
+      continue-on-error: true
 
     - name: Install zip utility
       run: sudo apt-get update && sudo apt-get install -y zip
