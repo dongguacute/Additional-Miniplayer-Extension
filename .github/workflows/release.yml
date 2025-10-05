@@ -104,14 +104,18 @@ jobs:
     - name: Create CRX package with crx3
       run: |
         # Create CRX file using crx3 (primary method)
-        cd ${{ env.EXT_DIR }} && crx3 . ../extension.pem --output ../Additional-Miniplayer-${{ env.VERSION }}.crx
+        # Copy PEM file to build directory to avoid path issues
+        cp extension.pem ${{ env.EXT_DIR }}/temp.pem
+        cd ${{ env.EXT_DIR }} && crx3 . temp.pem --output ../Additional-Miniplayer-${{ env.VERSION }}.crx
       continue-on-error: true
 
     - name: Create CRX package with crx (fallback)
       if: steps.create-crx-with-crx3.outcome == 'failure'
       run: |
         # If crx3 failed, try with crx package
-        cd ${{ env.EXT_DIR }} && crx pack . --private-key ../extension.pem --output ../Additional-Miniplayer-${{ env.VERSION }}.crx
+        # Copy PEM file to build directory to avoid path issues
+        cp extension.pem ${{ env.EXT_DIR }}/temp.pem
+        cd ${{ env.EXT_DIR }} && crx pack . --private-key temp.pem --output ../Additional-Miniplayer-${{ env.VERSION }}.crx
 
     - name: Verify CRX creation
       run: |
