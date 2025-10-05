@@ -54,8 +54,8 @@ jobs:
 
     - name: Add public key to manifest
       run: |
-        # Extract public key from PEM and add to manifest
-        openssl rsa -in extension.pem -pubout -outform DER | openssl base64 -A > pubkey.txt
+        # Extract public key from PEM and add to manifest using Node.js
+        node -e "const fs = require('fs'); const crypto = require('crypto'); try { const key = fs.readFileSync('extension.pem'); const pub = crypto.createPublicKey(key).export({type:'spki', format:'der'}); fs.writeFileSync('pubkey.txt', pub.toString('base64')); } catch (e) { console.error('Error extracting public key:', e.message); process.exit(1); }"
         jq --arg key "$(cat pubkey.txt)" '.key = $key' build/manifest.json > temp.json
         mv temp.json build/manifest.json
         cat build/manifest.json
@@ -65,7 +65,7 @@ jobs:
 
     - name: Create PEM file from secret
       run: |
-        echo "${{ secrets.WEB_EXT_PRIVATE_KEY }}" | base64 -d > extension.pem
+        echo "${{ secrets.WEB_EXT_PRIVATE_KEY }}" > extension.pem
 
     - name: Prepare extension directory
       run: |
