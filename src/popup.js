@@ -1,7 +1,7 @@
 'use strict';
 
 import './popup.css';
-import { t, updatePageTexts } from './i18n.js';
+import { t, updatePageTexts, initLocale, setLocale, getSupportedLocales, getLocale } from './i18n.js';
 
 (function() {
   // Function to get all videos from the current active tab
@@ -137,18 +137,92 @@ import { t, updatePageTexts } from './i18n.js';
 
   // Initialize the popup
   async function init() {
+    // Initialize locale settings
+    await initLocale();
+
     // Update all texts based on locale
     updatePageTexts();
-    
+
+    // Setup settings button
+    setupSettingsButton();
+
     // Show loading state
     const videoListContainer = document.getElementById('video-list');
     videoListContainer.innerHTML = `<p>${t('searchingVideos')}</p>`;
-    
+
     // Get videos from the current page
     const videos = await getVideosFromCurrentTab();
-    
+
     // Render the video list
     renderVideoList(videos);
+  }
+
+  // Setup settings button functionality
+  function setupSettingsButton() {
+    const settingsBtn = document.getElementById('settings-btn');
+    if (settingsBtn) {
+      settingsBtn.addEventListener('click', showLanguageSelector);
+    }
+  }
+
+  // Show language selector modal
+  function showLanguageSelector() {
+    // Create modal overlay
+    const modal = document.createElement('div');
+    modal.className = 'settings-modal';
+    modal.innerHTML = `
+      <div class="settings-modal-content">
+        <h3 data-i18n="language">${t('language')}</h3>
+        <div class="language-list">
+          ${getSupportedLocales().map(locale => `
+            <button class="language-option ${locale === getLocale() ? 'active' : ''}" data-locale="${locale}">
+              ${getLanguageDisplayName(locale)}
+            </button>
+          `).join('')}
+        </div>
+        <button class="close-settings" data-i18n="settings">×</button>
+      </div>
+    `;
+
+    // Add event listeners
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal || e.target.classList.contains('close-settings')) {
+        modal.remove();
+      }
+    });
+
+    // Language selection
+    modal.querySelectorAll('.language-option').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const selectedLocale = e.target.getAttribute('data-locale');
+        await setLocale(selectedLocale);
+        updatePageTexts();
+        modal.remove();
+
+        // Re-render video list with new language
+        const videoListContainer = document.getElementById('video-list');
+        const videos = await getVideosFromCurrentTab();
+        renderVideoList(videos);
+      });
+    });
+
+    document.body.appendChild(modal);
+  }
+
+  // Get display name for language
+  function getLanguageDisplayName(locale) {
+    const names = {
+      en: 'English',
+      'zh-CN': '中文(简体)',
+      'zh-TW': '中文(繁體)',
+      ja: '日本語',
+      fr: 'Français',
+      es: 'Español',
+      de: 'Deutsch',
+      ru: 'Русский',
+      ko: '한국어'
+    };
+    return names[locale] || locale;
   }
 
   // Start the initialization when the popup loads
