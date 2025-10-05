@@ -47,6 +47,11 @@ jobs:
         # Show updated manifest
         cat public/manifest.json
 
+    - name: Build extension
+      run: |
+        # Run build command
+        pnpm run build
+
     - name: Add public key to manifest
       run: |
         # Extract public key from PEM and add to manifest
@@ -54,11 +59,6 @@ jobs:
         jq --arg key "$(cat pubkey.txt)" '.key = $key' build/manifest.json > temp.json
         mv temp.json build/manifest.json
         cat build/manifest.json
-
-    - name: Build extension
-      run: |
-        # Run build command
-        pnpm run build
 
     - name: Install zip utility
       run: sudo apt-get update && sudo apt-get install -y zip
