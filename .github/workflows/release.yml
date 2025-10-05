@@ -35,7 +35,7 @@ jobs:
         echo "Extracted version: $VERSION"
 
     - name: Install zip utility and jq
-      run: sudo apt-get update && sudo apt-get install -y zip jq
+      run: sudo apt-get update && sudo apt-get install -y zip jq openssl
 
     - name: Create PEM file from secret
       run: |
@@ -56,21 +56,6 @@ jobs:
       run: |
         # Run build command
         pnpm run build
-
-    - name: Add public key to manifest
-      run: |
-        # Extract public key from PEM and add to manifest using Node.js
-        if [ -f "extension.pem" ]; then
-          echo "PEM file found, extracting public key..."
-          node -e "const fs = require('fs'); const crypto = require('crypto'); try { const key = fs.readFileSync('extension.pem'); const pub = crypto.createPublicKey(key).export({type:'spki', format:'der'}); fs.writeFileSync('pubkey.txt', pub.toString('base64')); console.log('Public key extracted successfully'); } catch (e) { console.error('Error extracting public key:', e.message); process.exit(1); }"
-          jq --arg key "$(cat pubkey.txt)" '.key = $key' build/manifest.json > temp.json
-          mv temp.json build/manifest.json
-          echo "Public key added to manifest"
-          cat build/manifest.json
-        else
-          echo "ERROR: Private key file not found!"
-          exit 1
-        fi
 
     - name: Prepare extension directory
       run: |
@@ -99,14 +84,25 @@ jobs:
         
         # Store the directory for the next steps
         echo "EXT_DIR=build" >> $GITHUB_ENV
-        
 
-    - name: Create ZIP package
+    - name: Add public key to manifest
       run: |
-        # Create ZIP file from the extension directory
-        cd ${{ env.EXT_DIR }}
-        zip -r ../Additional-Miniplayer-${{ env.VERSION }}.zip . -x "*.DS_Store" "__MACOSX/*"
-        cd ..
+        # Extract public key from PEM and add to manifest using Node.js
+        if [ -f "extension.pem" ]; then
+          echo "PEM file found, extracting public key..."
+          # Use openssl to extract the public key in the correct format for Chrome extensions
+          PUBKEY=$(openssl rsa -in extension.pem -pubout -outform DER | openssl base64 -A)
+          echo "Public key extracted: ${PUBKEY:0:20}..." # Show first 20 chars for verification
+          
+          # Add the key to the manifest
+          jq --arg key "$PUBKEY" '.key = $key' build/manifest.json > temp.json
+          mv temp.json build/manifest.json
+          echo "Public key added to manifest"
+          cat build/manifest.json
+        else
+          echo "ERROR: Private key file not found!"
+          exit 1
+        fi
 
     - name: Install CRX creation tools
       run: |
@@ -118,9 +114,13 @@ jobs:
         # Create CRX file using crx
         echo "Creating CRX file..."
         
+        # Check if manifest has the key field properly set
+        echo "Checking manifest key field:"
+        jq '.key' build/manifest.json
+        
         # Create CRX file from build directory using crx tool
         # Using the extension.pem that was already created earlier in the workflow
-        npx crx pack ${{ env.EXT_DIR }}/ -o Additional-Miniplayer-${{ env.VERSION }}.crx -p extension.pem
+        npx crx pack ${{ env.EXT_DIR }}/ -o Additional-Miniplayer-${{ env.VERSION }}.crx --private-key=extension.pem
         
         # Verify CRX file was created
         if [ -f "Additional-Miniplayer-${{ env.VERSION }}.crx" ]; then
@@ -136,6 +136,12 @@ jobs:
           exit 1
         fi
 
+    - name: Create ZIP package
+      run: |
+        # Create ZIP file from the extension directory
+        cd ${{ env.EXT_DIR }}
+        zip -r ../Additional-Miniplayer-${{ env.VERSION }}.zip . -x "*.DS_Store" "__MACOSX/*"
+        cd ..
 
     - name: List files before upload
       run: |
