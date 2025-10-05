@@ -34,12 +34,17 @@ jobs:
         echo "VERSION=${VERSION}" >> $GITHUB_ENV
         echo "Extracted version: $VERSION"
 
+    - name: Install zip utility and jq
+      run: sudo apt-get update && sudo apt-get install -y zip jq
+
+    - name: Create PEM file from secret
+      run: |
+        echo "${{ secrets.WEB_EXT_PRIVATE_KEY }}" > extension.pem
+        echo "PEM file created"
+        ls -la extension.pem
+
     - name: Update manifest.json version
       run: |
-        # Install jq for JSON manipulation
-        sudo apt-get update
-        sudo apt-get install -y jq
-
         # Update version in manifest.json
         jq '.version = "${{ env.VERSION }}"' public/manifest.json > temp.json
         mv temp.json public/manifest.json
@@ -56,21 +61,16 @@ jobs:
       run: |
         # Extract public key from PEM and add to manifest using Node.js
         if [ -f "extension.pem" ]; then
-          node -e "const fs = require('fs'); const crypto = require('crypto'); try { const key = fs.readFileSync('extension.pem'); const pub = crypto.createPublicKey(key).export({type:'spki', format:'der'}); fs.writeFileSync('pubkey.txt', pub.toString('base64')); } catch (e) { console.error('Error extracting public key:', e.message); process.exit(1); }"
+          echo "PEM file found, extracting public key..."
+          node -e "const fs = require('fs'); const crypto = require('crypto'); try { const key = fs.readFileSync('extension.pem'); const pub = crypto.createPublicKey(key).export({type:'spki', format:'der'}); fs.writeFileSync('pubkey.txt', pub.toString('base64')); console.log('Public key extracted successfully'); } catch (e) { console.error('Error extracting public key:', e.message); process.exit(1); }"
           jq --arg key "$(cat pubkey.txt)" '.key = $key' build/manifest.json > temp.json
           mv temp.json build/manifest.json
+          echo "Public key added to manifest"
           cat build/manifest.json
         else
-          echo "Private key file not found, skipping key addition"
+          echo "ERROR: Private key file not found!"
+          exit 1
         fi
-      continue-on-error: true
-
-    - name: Install zip utility
-      run: sudo apt-get update && sudo apt-get install -y zip
-
-    - name: Create PEM file from secret
-      run: |
-        echo "${{ secrets.WEB_EXT_PRIVATE_KEY }}" > extension.pem
 
     - name: Prepare extension directory
       run: |
@@ -116,26 +116,26 @@ jobs:
     - name: Create CRX package with crx3
       run: |
         # Create CRX file using crx3
-        if [ -f "extension.pem" ]; then
-          echo "PEM file found, attempting to create CRX..."
-          # Copy PEM file to build directory to avoid path issues
-          cp extension.pem ${{ env.EXT_DIR }}/temp.pem
-          cd ${{ env.EXT_DIR }} && npx crx3 . temp.pem --output ../Additional-Miniplayer-${{ env.VERSION }}.crx
-        else
-          echo "PEM file not found, skipping CRX creation"
-        fi
-      continue-on-error: true
-
-    - name: Verify CRX creation
-      run: |
-        echo "Checking for CRX file existence..."
+        echo "Creating CRX file..."
+        echo "PEM file status:"
+        ls -la extension.pem
+        
+        # Copy PEM file to build directory to avoid path issues
+        cp extension.pem ${{ env.EXT_DIR }}/temp.pem
+        
+        # Create CRX file
+        cd ${{ env.EXT_DIR }} && npx crx3 . temp.pem --output ../Additional-Miniplayer-${{ env.VERSION }}.crx
+        cd ..
+        
+        # Verify creation
         if [ -f "Additional-Miniplayer-${{ env.VERSION }}.crx" ]; then
-          echo "CRX file created successfully: Additional-Miniplayer-${{ env.VERSION }}.crx"
-          ls -la Additional-Miniplayer-${{ env.VERSION }}.crx
+          echo "CRX file created successfully!"
+          ls -lh Additional-Miniplayer-${{ env.VERSION }}.crx
         else
-          echo "WARNING: CRX file was not created. Only ZIP file will be uploaded."
-          echo "To install manually: Open chrome://extensions, enable Developer mode, click 'Load unpacked' and select the extracted ZIP contents."
+          echo "ERROR: CRX file was not created!"
+          exit 1
         fi
+
 
     - name: List files before upload
       run: |
@@ -146,7 +146,6 @@ jobs:
 
     - name: Upload CRX to release
       uses: actions/upload-release-asset@v1
-      if: ${{ always() && hashFiles('./Additional-Miniplayer-${{ env.VERSION }}.crx') != '' }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
