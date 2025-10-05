@@ -110,34 +110,31 @@ jobs:
 
     - name: Install CRX creation tools
       run: |
-        # Install crx3 package locally
-        pnpm install crx3
+        # Install crx package locally
+        pnpm install crx
 
-    - name: Create CRX package with crx3
+    - name: Create CRX package with crx
       run: |
-        # Create CRX file using crx3
+        # Create CRX file using crx
         echo "Creating CRX file..."
         
-        # Copy PEM file outside of build directory to avoid packaging it
-        cp extension.pem ../temp-key.pem
+        # Copy PEM file to be accessible by crx tool
+        cp extension.pem ./
         
-        # Create CRX file from build directory using relative path to key
-        cd ${{ env.EXT_DIR }}
-        npx crx3 . ../temp-key.pem
-        cd ..
+        # Create CRX file from build directory using crx tool
+        npx crx pack ${{ env.EXT_DIR }}/ -o Additional-Miniplayer-${{ env.VERSION }}.crx -p extension.pem
         
-        # Move and rename the created CRX file
-        if [ -f "${{ env.EXT_DIR }}/web-extension.crx" ]; then
-          mv "${{ env.EXT_DIR }}/web-extension.crx" "Additional-Miniplayer-${{ env.VERSION }}.crx"
-          echo "CRX file created and renamed successfully!"
+        # Verify CRX file was created
+        if [ -f "Additional-Miniplayer-${{ env.VERSION }}.crx" ]; then
+          echo "CRX file created successfully!"
           ls -lh Additional-Miniplayer-${{ env.VERSION }}.crx
           
-          # Clean up temp key
-          rm -f ../temp-key.pem
+          # Clean up the private key file for security
+          rm -f extension.pem
         else
-          echo "ERROR: CRX file was not created at expected location!"
-          echo "Checking build directory contents:"
-          ls -la ${{ env.EXT_DIR }}/
+          echo "ERROR: CRX file was not created!"
+          echo "Checking current directory contents:"
+          ls -la
           exit 1
         fi
 
