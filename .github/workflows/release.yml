@@ -116,16 +116,24 @@ jobs:
     - name: Create CRX package with crx3
       run: |
         # Create CRX file using crx3
-        # Copy PEM file to build directory to avoid path issues
-        cp extension.pem ${{ env.EXT_DIR }}/temp.pem
-        cd ${{ env.EXT_DIR }} && npx crx3 . temp.pem --output ../Additional-Miniplayer-${{ env.VERSION }}.crx
+        if [ -f "extension.pem" ]; then
+          echo "PEM file found, attempting to create CRX..."
+          # Copy PEM file to build directory to avoid path issues
+          cp extension.pem ${{ env.EXT_DIR }}/temp.pem
+          cd ${{ env.EXT_DIR }} && npx crx3 . temp.pem --output ../Additional-Miniplayer-${{ env.VERSION }}.crx
+        else
+          echo "PEM file not found, skipping CRX creation"
+        fi
+      continue-on-error: true
 
     - name: Verify CRX creation
       run: |
+        echo "Checking for CRX file existence..."
         if [ -f "Additional-Miniplayer-${{ env.VERSION }}.crx" ]; then
-          echo "CRX file created successfully"
+          echo "CRX file created successfully: Additional-Miniplayer-${{ env.VERSION }}.crx"
+          ls -la Additional-Miniplayer-${{ env.VERSION }}.crx
         else
-          echo "WARNING: CRX file was not created. Users can install using the ZIP file."
+          echo "WARNING: CRX file was not created. Only ZIP file will be uploaded."
           echo "To install manually: Open chrome://extensions, enable Developer mode, click 'Load unpacked' and select the extracted ZIP contents."
         fi
 
@@ -138,6 +146,7 @@ jobs:
 
     - name: Upload CRX to release
       uses: actions/upload-release-asset@v1
+      if: ${{ always() && hashFiles('./Additional-Miniplayer-${{ env.VERSION }}.crx') != '' }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
