@@ -117,17 +117,13 @@ jobs:
       run: |
         # Create CRX file using crx3
         echo "Creating CRX file..."
-        echo "Current directory: $(pwd)"
-        echo "PEM file status:"
-        ls -la extension.pem
         
-        # Get absolute path to PEM file
-        PEM_PATH="$(pwd)/extension.pem"
-        echo "PEM absolute path: $PEM_PATH"
+        # Copy PEM file outside of build directory to avoid packaging it
+        cp extension.pem ../temp-key.pem
         
-        # Create CRX file - crx3 creates web-extension.crx by default
+        # Create CRX file from build directory using relative path to key
         cd ${{ env.EXT_DIR }}
-        npx crx3 . "$PEM_PATH"
+        npx crx3 . ../temp-key.pem
         cd ..
         
         # Move and rename the created CRX file
@@ -135,6 +131,9 @@ jobs:
           mv "${{ env.EXT_DIR }}/web-extension.crx" "Additional-Miniplayer-${{ env.VERSION }}.crx"
           echo "CRX file created and renamed successfully!"
           ls -lh Additional-Miniplayer-${{ env.VERSION }}.crx
+          
+          # Clean up temp key
+          rm -f ../temp-key.pem
         else
           echo "ERROR: CRX file was not created at expected location!"
           echo "Checking build directory contents:"
