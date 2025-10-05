@@ -39,13 +39,21 @@ jobs:
         # Install jq for JSON manipulation
         sudo apt-get update
         sudo apt-get install -y jq
-        
+
         # Update version in manifest.json
         jq '.version = "${{ env.VERSION }}"' public/manifest.json > temp.json
         mv temp.json public/manifest.json
-        
+
         # Show updated manifest
         cat public/manifest.json
+
+    - name: Add public key to manifest
+      run: |
+        # Extract public key from PEM and add to manifest
+        openssl rsa -in extension.pem -pubout -outform DER | openssl base64 -A > pubkey.txt
+        jq --arg key "$(cat pubkey.txt)" '.key = $key' build/manifest.json > temp.json
+        mv temp.json build/manifest.json
+        cat build/manifest.json
 
     - name: Build extension
       run: |
@@ -103,19 +111,10 @@ jobs:
 
     - name: Create CRX package with crx3
       run: |
-        # Create CRX file using crx3 (primary method)
+        # Create CRX file using crx3
         # Copy PEM file to build directory to avoid path issues
         cp extension.pem ${{ env.EXT_DIR }}/temp.pem
         cd ${{ env.EXT_DIR }} && crx3 . temp.pem --output ../Additional-Miniplayer-${{ env.VERSION }}.crx
-      continue-on-error: true
-
-    - name: Create CRX package with crx (fallback)
-      if: steps.create-crx-with-crx3.outcome == 'failure'
-      run: |
-        # If crx3 failed, try with crx package
-        # Copy PEM file to build directory to avoid path issues
-        cp extension.pem ${{ env.EXT_DIR }}/temp.pem
-        cd ${{ env.EXT_DIR }} && crx pack . --private-key temp.pem --output ../Additional-Miniplayer-${{ env.VERSION }}.crx
 
     - name: Verify CRX creation
       run: |
@@ -139,7 +138,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./build/web-extension.crx
+        asset_path: ./Additional-Miniplayer-${{ env.VERSION }}.crx
         asset_name: Additional-Miniplayer-${{ env.VERSION }}.crx
         asset_content_type: application/octet-stream
 
