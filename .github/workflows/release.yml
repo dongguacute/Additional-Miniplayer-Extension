@@ -53,8 +53,8 @@ jobs:
           cp -r public/* dist/
         fi
 
-    - name: Install crx package
-      run: npm install -g crx
+    - name: Install zip utility
+      run: sudo apt-get update && sudo apt-get install -y zip
 
     - name: Create PEM file from secret
       run: |
@@ -67,22 +67,61 @@ jobs:
         
         # Check if build directory exists after build
         if [ -d "build" ]; then
-          # Use the build directory as the extension source
+          # Create a zip of the build directory first (always reliable)
           cd build
           zip -r ../Additional-Miniplayer-${{ env.VERSION }}.zip . -x "*.DS_Store" "__MACOSX/*"
           cd ..
           
-          # Use crx to create CRX file from build directory
-          crx pack build -o Additional-Miniplayer-${{ env.VERSION }}.crx --private-key extension.pem
+          # Try to create CRX using the most reliable method
+          # Install crx3 which is specifically designed for CRX3 format
+          npm install -g crx3
+          
+          # Create CRX file using crx3 which handles the CRX3 format properly
+          npx crx3 build extension.pem --output Additional-Miniplayer-${{ env.VERSION }}.crx
+          
+          # Verify that the CRX was created successfully
+          if [ $? -ne 0 ] || [ ! -f "Additional-Miniplayer-${{ env.VERSION }}.crx" ]; then
+            echo "CRX3 creation failed, trying with crx package"
+            
+            # Try with crx package as fallback
+            npm install crx@6.0.0 -g
+            npx crx pack build --private-key extension.pem --output Additional-Miniplayer-${{ env.VERSION }}.crx
+          fi
+          
+          # If both methods fail, just ensure ZIP is available for manual installation
+          if [ $? -ne 0 ] || [ ! -f "Additional-Miniplayer-${{ env.VERSION }}.crx" ]; then
+            echo "Both CRX creation methods failed, providing ZIP file for manual installation"
+            echo "Users can install by going to chrome://extensions, enabling developer mode, and loading unpacked extension"
+          fi
         else
           echo "Build directory not found, using public directory instead"
-          # Create a zip of the public directory
+          
+          # Create a zip of the public directory first (always reliable)
           cd public
           zip -r ../Additional-Miniplayer-${{ env.VERSION }}.zip . -x "*.DS_Store" "__MACOSX/*"
           cd ..
           
-          # Use crx to create CRX file from public directory
-          crx pack public -o Additional-Miniplayer-${{ env.VERSION }}.crx --private-key extension.pem
+          # Try to create CRX using the most reliable method
+          # Install crx3 which is specifically designed for CRX3 format
+          npm install -g crx3
+          
+          # Create CRX file using crx3 which handles the CRX3 format properly
+          npx crx3 public extension.pem --output Additional-Miniplayer-${{ env.VERSION }}.crx
+          
+          # Verify that the CRX was created successfully
+          if [ $? -ne 0 ] || [ ! -f "Additional-Miniplayer-${{ env.VERSION }}.crx" ]; then
+            echo "CRX3 creation failed, trying with crx package"
+            
+            # Try with crx package as fallback
+            npm install crx@6.0.0 -g
+            npx crx pack public --private-key extension.pem --output Additional-Miniplayer-${{ env.VERSION }}.crx
+          fi
+          
+          # If both methods fail, just ensure ZIP is available for manual installation
+          if [ $? -ne 0 ] || [ ! -f "Additional-Miniplayer-${{ env.VERSION }}.crx" ]; then
+            echo "Both CRX creation methods failed, providing ZIP file for manual installation"
+            echo "Users can install by going to chrome://extensions, enabling developer mode, and loading unpacked extension"
+          fi
         fi
 
     - name: Upload CRX to release
