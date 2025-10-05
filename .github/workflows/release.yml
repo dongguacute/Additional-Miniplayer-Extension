@@ -19,8 +19,13 @@ jobs:
       with:
         node-version: '18'
 
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 8
+
     - name: Install dependencies
-      run: npm install
+      run: pnpm install
 
     - name: Extract tag version
       id: extract_version
@@ -45,8 +50,8 @@ jobs:
     - name: Build extension
       run: |
         # Check if build command exists in package.json
-        if npm run build --dry-run > /dev/null 2>&1; then
-          npm run build
+        if pnpm run build --dry-run > /dev/null 2>&1; then
+          pnpm run build
         else
           echo "Build command not found in package.json, copying public directory"
           mkdir -p dist
@@ -93,8 +98,8 @@ jobs:
     - name: Install CRX creation tools
       run: |
         # Install both crx3 and crx packages for CRX creation
-        npm install -g crx3
-        npm install crx@6.0.0 -g
+        pnpm install -g crx3
+        pnpm install crx@6.0.0 -g
 
     - name: Create CRX package with crx3
       run: |
