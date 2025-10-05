@@ -105,15 +105,13 @@ jobs:
 
     - name: Install CRX creation tools
       run: |
-        # Install crx3 package locally
-        pnpm install crx3
+        # Install web-ext for CRX creation
+        pnpm install -g web-ext
 
-    - name: Create CRX package with crx3
+    - name: Create CRX package with web-ext
       run: |
-        # Create CRX file using crx3
-        # Copy PEM file to build directory to avoid path issues
-        cp extension.pem ${{ env.EXT_DIR }}/temp.pem
-        cd ${{ env.EXT_DIR }} && npx crx3 . temp.pem --output ../Additional-Miniplayer-${{ env.VERSION }}.crx
+        # Create CRX file using web-ext
+        web-ext sign --source-dir ${{ env.EXT_DIR }} --artifacts-dir . --private-key extension.pem --filename Additional-Miniplayer-${{ env.VERSION }}
 
     - name: Verify CRX creation
       run: |
