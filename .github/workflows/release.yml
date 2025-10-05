@@ -99,7 +99,7 @@ jobs:
       run: |
         # Install both crx3 and crx packages for CRX creation
         pnpm install -g crx3
-        pnpm install crx@6.0.0 -g
+        pnpm install crx -g
 
     - name: Create CRX package with crx3
       run: |
