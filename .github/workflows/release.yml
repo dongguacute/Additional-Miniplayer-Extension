@@ -65,7 +65,7 @@ jobs:
 
     - name: Create PEM file from secret
       run: |
-        echo "${{ secrets.WEB_EXT_PRIVATE_KEY }}" > extension.pem
+        echo "${{ secrets.WEB_EXT_PRIVATE_KEY }}" | base64 -d > extension.pem
 
     - name: Prepare extension directory
       run: |
@@ -105,13 +105,15 @@ jobs:
 
     - name: Install CRX creation tools
       run: |
-        # Install web-ext for CRX creation
-        pnpm install -g web-ext
+        # Install crx3 package locally
+        pnpm install crx3
 
-    - name: Create CRX package with web-ext
+    - name: Create CRX package with crx3
       run: |
-        # Create CRX file using web-ext
-        web-ext sign --source-dir ${{ env.EXT_DIR }} --artifacts-dir . --private-key extension.pem --filename Additional-Miniplayer-${{ env.VERSION }}
+        # Create CRX file using crx3
+        # Copy PEM file to build directory to avoid path issues
+        cp extension.pem ${{ env.EXT_DIR }}/temp.pem
+        cd ${{ env.EXT_DIR }} && npx crx3 . temp.pem --output ../Additional-Miniplayer-${{ env.VERSION }}.crx
 
     - name: Verify CRX creation
       run: |
