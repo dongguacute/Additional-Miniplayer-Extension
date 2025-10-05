@@ -49,14 +49,8 @@ jobs:
 
     - name: Build extension
       run: |
-        # Check if build command exists in package.json
-        if pnpm run build --dry-run > /dev/null 2>&1; then
-          pnpm run build
-        else
-          echo "Build command not found in package.json, copying public directory"
-          mkdir -p dist
-          cp -r public/* dist/
-        fi
+        # Run build command
+        pnpm run build
 
     - name: Install zip utility
       run: sudo apt-get update && sudo apt-get install -y zip
@@ -68,20 +62,31 @@ jobs:
     - name: Prepare extension directory
       run: |
         # Wait for build directory to be created
-        sleep 2
+        # Check for build directory with retry logic
+        for i in {1..10}; do
+          if [ -d "build" ]; then
+            echo "Build directory found"
+            break
+          fi
+          echo "Waiting for build directory... ($i/10)"
+          sleep 2
+        done
         
-        # Use build directory for extension
-        EXT_DIR="build"
-        echo "Using build directory: $EXT_DIR"
+        # Verify build directory exists and contains manifest.json
+        if [ ! -d "build" ]; then
+          echo "Build directory does not exist, exiting"
+          exit 1
+        fi
         
-        # Ensure manifest.json exists in the extension directory
-        if [ ! -f "$EXT_DIR/manifest.json" ]; then
-          echo "Copying manifest.json to $EXT_DIR/"
-          cp public/manifest.json $EXT_DIR/
+        # Verify manifest.json exists in the build directory
+        if [ ! -f "build/manifest.json" ]; then
+          echo "manifest.json not found in build directory"
+          exit 1
         fi
         
         # Store the directory for the next steps
-        echo "EXT_DIR=$EXT_DIR" >> $GITHUB_ENV
+        echo "EXT_DIR=build" >> $GITHUB_ENV
+        
 
     - name: Create ZIP package
       run: |
