@@ -70,14 +70,9 @@ jobs:
         # Wait for build directory to be created
         sleep 2
         
-        # Determine which directory to use for the extension
-        if [ -d "build" ]; then
-          echo "Build directory found, using build/"
-          EXT_DIR="build"
-        else
-          echo "Build directory not found, using public/"
-          EXT_DIR="public"
-        fi
+        # Use build directory for extension
+        EXT_DIR="build"
+        echo "Using build directory: $EXT_DIR"
         
         # Ensure manifest.json exists in the extension directory
         if [ ! -f "$EXT_DIR/manifest.json" ]; then
@@ -104,14 +99,14 @@ jobs:
     - name: Create CRX package with crx3
       run: |
         # Create CRX file using crx3 (primary method)
-        crx3 ${{ env.EXT_DIR }} extension.pem --output Additional-Miniplayer-${{ env.VERSION }}.crx
+        cd ${{ env.EXT_DIR }} && crx3 . ../extension.pem --output ../Additional-Miniplayer-${{ env.VERSION }}.crx
       continue-on-error: true
 
     - name: Create CRX package with crx (fallback)
       if: steps.create-crx-with-crx3.outcome == 'failure'
       run: |
         # If crx3 failed, try with crx package
-        crx pack ${{ env.EXT_DIR }} --private-key extension.pem --output Additional-Miniplayer-${{ env.VERSION }}.crx
+        cd ${{ env.EXT_DIR }} && crx pack . --private-key ../extension.pem --output ../Additional-Miniplayer-${{ env.VERSION }}.crx
 
     - name: Verify CRX creation
       run: |
