@@ -118,10 +118,8 @@ jobs:
         # Create CRX file using crx
         echo "Creating CRX file..."
         
-        # Copy PEM file to be accessible by crx tool
-        cp extension.pem ./
-        
         # Create CRX file from build directory using crx tool
+        # Using the extension.pem that was already created earlier in the workflow
         npx crx pack ${{ env.EXT_DIR }}/ -o Additional-Miniplayer-${{ env.VERSION }}.crx -p extension.pem
         
         # Verify CRX file was created
