@@ -85,25 +85,6 @@ jobs:
         # Store the directory for the next steps
         echo "EXT_DIR=build" >> $GITHUB_ENV
 
-    - name: Add public key to manifest
-      run: |
-        # Extract public key from PEM and add to manifest using Node.js
-        if [ -f "extension.pem" ]; then
-          echo "PEM file found, extracting public key..."
-          # Use openssl to extract the public key in the correct format for Chrome extensions
-          PUBKEY=$(openssl rsa -in extension.pem -pubout -outform DER | openssl base64 -A)
-          echo "Public key extracted: ${PUBKEY:0:20}..." # Show first 20 chars for verification
-          
-          # Add the key to the manifest
-          jq --arg key "$PUBKEY" '.key = $key' build/manifest.json > temp.json
-          mv temp.json build/manifest.json
-          echo "Public key added to manifest"
-          cat build/manifest.json
-        else
-          echo "ERROR: Private key file not found!"
-          exit 1
-        fi
-
     - name: Install CRX creation tools
       run: |
         # Install crx package locally
@@ -114,12 +95,25 @@ jobs:
         # Create CRX file using crx
         echo "Creating CRX file..."
         
-        # Check if manifest has the key field properly set
-        echo "Checking manifest key field:"
-        jq '.key' build/manifest.json
+        # For CRX creation, we may need to temporarily add the key to the manifest
+        # Extract public key from PEM
+        if [ -f "extension.pem" ]; then
+          echo "PEM file found, extracting public key..."
+          PUBKEY=$(openssl rsa -in extension.pem -pubout -outform DER | openssl base64 -A)
+          echo "Public key extracted: ${PUBKEY:0:20}..." # Show first 20 chars for verification
+          
+          # Add the key to the manifest temporarily for CRX creation
+          jq --arg key "$PUBKEY" '.key = $key' build/manifest.json > temp.json
+          mv temp.json build/manifest.json
+          echo "Public key temporarily added to manifest for CRX creation"
+          cat build/manifest.json
+        else
+          echo "ERROR: Private key file not found!"
+          exit 1
+        fi
         
         # Create CRX file from build directory using crx tool
-        # Using the extension.pem that was already created earlier in the workflow
+        # The crx tool will handle the signing process with the provided private key
         npx crx pack ${{ env.EXT_DIR }}/ -o Additional-Miniplayer-${{ env.VERSION }}.crx --private-key=extension.pem
         
         # Verify CRX file was created
