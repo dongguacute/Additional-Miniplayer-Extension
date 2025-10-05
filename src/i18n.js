@@ -3,7 +3,7 @@
 // Browser API polyfill for cross-browser compatibility
 const browserAPI = globalThis.browser || globalThis.chrome;
 
-// 国际化资源文件
+// Internationalization resource file
 const messages = {
   en: {
     title: 'Additional Miniplayer',
@@ -124,14 +124,14 @@ const messages = {
   }
 };
 
-// 获取浏览器语言环境
+// Get browser locale
 function getBrowserLocale() {
   try {
-    // 优先使用 navigator.languages，然后是 navigator.language，最后使用默认值 'en'
+    // Prioritize navigator.languages, then navigator.language, finally use default 'en'
     const locales = navigator.languages || [navigator.language];
     for (const locale of locales) {
       const lang = locale.toLowerCase();
-      // 检查是否支持的语言
+      // Check if the language is supported
       if (lang === 'zh-tw' || lang === 'zh-hk' || lang === 'zh-mo') {
         return 'zh-TW';
       }
@@ -160,7 +160,7 @@ function getBrowserLocale() {
         return 'en';
       }
     }
-    // 如果没有匹配的语言，返回默认语言
+    // If no matching language, return default language
     return 'en';
   } catch (error) {
     console.warn('Error detecting browser locale, defaulting to en:', error);
@@ -168,24 +168,24 @@ function getBrowserLocale() {
   }
 }
 
-// 当前语言环境
+// Current locale
 let currentLocale = null;
 
-// 初始化语言设置
+// Initialize language settings
 async function initLocale() {
   try {
-    // 检查 browserAPI.storage 是否可用
+    // Check if browserAPI.storage is available
     if (browserAPI && browserAPI.storage && browserAPI.storage.sync) {
-      // 尝试从存储中获取用户设置的语言
+      // Try to get user-set language from storage
       const result = await browserAPI.storage.sync.get(['locale']);
       if (result.locale && messages[result.locale]) {
         currentLocale = result.locale;
       } else {
-        // 如果没有设置或不支持，则使用浏览器语言
+        // If not set or not supported, use browser language
         currentLocale = getBrowserLocale();
       }
     } else {
-      // 如果 browserAPI.storage 不可用，直接使用浏览器语言
+      // If browserAPI.storage is not available, use browser language directly
       console.warn('browserAPI.storage not available, using browser locale');
       currentLocale = getBrowserLocale();
     }
@@ -195,12 +195,12 @@ async function initLocale() {
   }
 }
 
-// 获取翻译文本
+// Get translated text
 function t(key, locale = null) {
   const targetLocale = locale || currentLocale;
   const message = messages[targetLocale] && messages[targetLocale][key];
   
-  // 如果目标语言没有找到对应文本，则回退到英语
+  // If no corresponding text found in target language, fall back to English
   if (!message && targetLocale !== 'en') {
     return messages.en[key] || key;
   }
@@ -208,7 +208,7 @@ function t(key, locale = null) {
   return message || key;
 }
 
-// 切换语言（同步版本，用于内部使用）
+// Switch language (synchronous version, for internal use)
 function setLocaleSync(locale) {
   if (messages[locale]) {
     currentLocale = locale;
@@ -217,7 +217,7 @@ function setLocaleSync(locale) {
   }
 }
 
-// 切换语言（异步版本，保存到存储）
+// Switch language (asynchronous version, save to storage)
 async function setLocale(locale) {
   if (messages[locale]) {
     currentLocale = locale;
@@ -233,25 +233,25 @@ async function setLocale(locale) {
   }
 }
 
-// 获取当前语言
+// Get current language
 function getLocale() {
   return currentLocale;
 }
 
-// 获取支持的语言列表
+// Get list of supported languages
 function getSupportedLocales() {
   return Object.keys(messages);
 }
 
-// 动态更新页面中文本的函数
+// Function to dynamically update page texts
 function updatePageTexts() {
-  // 更新页面标题
+  // Update page title
   const titleElement = document.querySelector('title');
   if (titleElement) {
     titleElement.textContent = t('title');
   }
 
-  // 更新带有 data-i18n 属性的元素
+  // Update elements with data-i18n attribute
   const i18nElements = document.querySelectorAll('[data-i18n]');
   i18nElements.forEach(element => {
     const key = element.getAttribute('data-i18n');
@@ -259,7 +259,7 @@ function updatePageTexts() {
     element.textContent = text;
   });
 
-  // 更新带有 data-i18n-attr 属性的元素（用于更新属性值）
+  // Update elements with data-i18n-attr attribute (for updating attribute values)
   const i18nAttrElements = document.querySelectorAll('[data-i18n-attr]');
   i18nAttrElements.forEach(element => {
     const attrData = element.getAttribute('data-i18n-attr');
@@ -269,5 +269,5 @@ function updatePageTexts() {
   });
 }
 
-// 导出国际化函数
+// Export internationalization functions
 export { t, setLocale, setLocaleSync, getLocale, getSupportedLocales, updatePageTexts, getBrowserLocale, initLocale };

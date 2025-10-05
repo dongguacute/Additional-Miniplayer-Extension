@@ -84,7 +84,7 @@ import { t, updatePageTexts, initLocale, setLocale, getSupportedLocales, getLoca
           <rect x="6" y="6" width="8" height="6" rx="1" ry="1" fill="white" stroke="white" stroke-width="1.2"/>
         </svg>
       `;
-      // 设置按钮的title属性用于国际化
+      // Set button's title attribute for internationalization
       openBtn.setAttribute('data-i18n-attr', `openMiniplayer|title`);
       openBtn.addEventListener('click', (e) => {
         e.stopPropagation();
