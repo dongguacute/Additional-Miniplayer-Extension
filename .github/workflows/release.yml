@@ -122,13 +122,20 @@ jobs:
           echo "To install manually: Open chrome://extensions, enable Developer mode, click 'Load unpacked' and select the extracted ZIP contents."
         fi
 
+    - name: List files before upload
+      run: |
+        echo "Files in root directory:"
+        ls -la
+        echo "Files in build directory:"
+        ls -la build/
+
     - name: Upload CRX to release
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./build/Additional-Miniplayer-${{ env.VERSION }}.crx
+        asset_path: ./Additional-Miniplayer-${{ env.VERSION }}.crx
         asset_name: Additional-Miniplayer-${{ env.VERSION }}.crx
         asset_content_type: application/octet-stream
 
@@ -138,6 +145,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./build/Additional-Miniplayer-${{ env.VERSION }}.zip
+        asset_path: ./Additional-Miniplayer-${{ env.VERSION }}.zip
         asset_name: Additional-Miniplayer-${{ env.VERSION }}.zip
         asset_content_type: application/zip
