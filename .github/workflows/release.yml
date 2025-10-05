@@ -117,22 +117,28 @@ jobs:
       run: |
         # Create CRX file using crx3
         echo "Creating CRX file..."
+        echo "Current directory: $(pwd)"
         echo "PEM file status:"
         ls -la extension.pem
         
-        # Copy PEM file to build directory to avoid path issues
-        cp extension.pem ${{ env.EXT_DIR }}/temp.pem
+        # Get absolute path to PEM file
+        PEM_PATH="$(pwd)/extension.pem"
+        echo "PEM absolute path: $PEM_PATH"
         
-        # Create CRX file
-        cd ${{ env.EXT_DIR }} && npx crx3 . temp.pem --output ../Additional-Miniplayer-${{ env.VERSION }}.crx
+        # Create CRX file - crx3 creates web-extension.crx by default
+        cd ${{ env.EXT_DIR }}
+        npx crx3 . "$PEM_PATH"
         cd ..
         
-        # Verify creation
-        if [ -f "Additional-Miniplayer-${{ env.VERSION }}.crx" ]; then
-          echo "CRX file created successfully!"
+        # Move and rename the created CRX file
+        if [ -f "${{ env.EXT_DIR }}/web-extension.crx" ]; then
+          mv "${{ env.EXT_DIR }}/web-extension.crx" "Additional-Miniplayer-${{ env.VERSION }}.crx"
+          echo "CRX file created and renamed successfully!"
           ls -lh Additional-Miniplayer-${{ env.VERSION }}.crx
         else
-          echo "ERROR: CRX file was not created!"
+          echo "ERROR: CRX file was not created at expected location!"
+          echo "Checking build directory contents:"
+          ls -la ${{ env.EXT_DIR }}/
           exit 1
         fi
 
