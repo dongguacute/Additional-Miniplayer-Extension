@@ -1,5 +1,8 @@
 'use strict';
 
+// Browser API polyfill for cross-browser compatibility
+const browserAPI = globalThis.browser || globalThis.chrome;
+
 import './popup.css';
 import { t, updatePageTexts, initLocale, setLocale, getSupportedLocales, getLocale } from './i18n.js';
 
@@ -8,11 +11,11 @@ import { t, updatePageTexts, initLocale, setLocale, getSupportedLocales, getLoca
   async function getVideosFromCurrentTab() {
     try {
       // Query the active tab in the current window
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      
+      const [tab] = await browserAPI.tabs.query({ active: true, currentWindow: true });
+
       // Send a message to the content script to get video information
-      const response = await chrome.tabs.sendMessage(tab.id, { type: 'GET_VIDEOS' });
-      
+      const response = await browserAPI.tabs.sendMessage(tab.id, { type: 'GET_VIDEOS' });
+
       return response.videos || [];
     } catch (error) {
       console.error('Error getting videos from current tab:', error);
@@ -112,16 +115,16 @@ import { t, updatePageTexts, initLocale, setLocale, getSupportedLocales, getLoca
   }
 
   // Function to open miniplayer for a specific video
- async function openMiniplayerForVideo(video) {
+  async function openMiniplayerForVideo(video) {
     try {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      
+      const [tab] = await browserAPI.tabs.query({ active: true, currentWindow: true });
+
       // Send a message to the content script to activate miniplayer for this video
-      const response = await chrome.tabs.sendMessage(tab.id, {
+      const response = await browserAPI.tabs.sendMessage(tab.id, {
         type: 'OPEN_MINIPLAYER',
         videoSrc: video.src
       });
-      
+
       // Close the popup after opening the miniplayer
       window.close();
     } catch (error) {

@@ -1,7 +1,10 @@
 'use strict';
 
+// Browser API polyfill for cross-browser compatibility
+const browserAPI = globalThis.browser || globalThis.chrome;
+
 // Listen for messages from popup
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+browserAPI.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.type === 'GET_VIDEOS') {
         // Get all valid videos on the page and return their info
         const videos = Array.from(document.querySelectorAll('video'))

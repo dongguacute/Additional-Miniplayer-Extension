@@ -1,7 +1,10 @@
 'use strict';
 
+// Browser API polyfill for cross-browser compatibility
+const browserAPI = globalThis.browser || globalThis.chrome;
+
 // Background script for handling messages and extension events
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+browserAPI.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.type === 'GREETINGS') {
     // Send a response message
     sendResponse({

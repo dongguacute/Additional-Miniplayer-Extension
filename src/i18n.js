@@ -1,5 +1,8 @@
 'use strict';
 
+// Browser API polyfill for cross-browser compatibility
+const browserAPI = globalThis.browser || globalThis.chrome;
+
 // 国际化资源文件
 const messages = {
   en: {
@@ -171,12 +174,19 @@ let currentLocale = null;
 // 初始化语言设置
 async function initLocale() {
   try {
-    // 尝试从存储中获取用户设置的语言
-    const result = await chrome.storage.sync.get(['locale']);
-    if (result.locale && messages[result.locale]) {
-      currentLocale = result.locale;
+    // 检查 browserAPI.storage 是否可用
+    if (browserAPI && browserAPI.storage && browserAPI.storage.sync) {
+      // 尝试从存储中获取用户设置的语言
+      const result = await browserAPI.storage.sync.get(['locale']);
+      if (result.locale && messages[result.locale]) {
+        currentLocale = result.locale;
+      } else {
+        // 如果没有设置或不支持，则使用浏览器语言
+        currentLocale = getBrowserLocale();
+      }
     } else {
-      // 如果没有设置或不支持，则使用浏览器语言
+      // 如果 browserAPI.storage 不可用，直接使用浏览器语言
+      console.warn('browserAPI.storage not available, using browser locale');
       currentLocale = getBrowserLocale();
     }
   } catch (error) {
@@ -212,7 +222,9 @@ async function setLocale(locale) {
   if (messages[locale]) {
     currentLocale = locale;
     try {
-      await chrome.storage.sync.set({ locale: locale });
+      if (browserAPI && browserAPI.storage && browserAPI.storage.sync) {
+        await browserAPI.storage.sync.set({ locale: locale });
+      }
     } catch (error) {
       console.warn('Error saving locale to storage:', error);
     }
