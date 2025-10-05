@@ -31,7 +31,7 @@ const messages = {
     settings: '设置',
     language: '语言'
   },
-  'zh-TW': {
+  'zh-Hant': {
     title: 'Additional Miniplayer',
     videoList: '影片清單',
     searchingVideos: '正在搜尋頁面中的影片...',
@@ -133,7 +133,7 @@ function getBrowserLocale() {
       const lang = locale.toLowerCase();
       // Check if the language is supported
       if (lang === 'zh-tw' || lang === 'zh-hk' || lang === 'zh-mo') {
-        return 'zh-TW';
+        return 'zh-Hant';
       }
       if (lang.startsWith('zh')) {
         return 'zh-CN';

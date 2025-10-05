@@ -217,7 +217,7 @@ import { t, updatePageTexts, initLocale, setLocale, getSupportedLocales, getLoca
     const names = {
       en: 'English',
       'zh-CN': '中文(简体)',
-      'zh-TW': '中文(繁體)',
+      'zh-Hant': '中文(繁體)',
       ja: '日本語',
       fr: 'Français',
       es: 'Español',
