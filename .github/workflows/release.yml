@@ -65,7 +65,7 @@ jobs:
 
     - name: Create PEM file from secret
       run: |
-        echo "${{ secrets.WEB_EXT_PRIVATE_KEY }}" | base64 -d > extension.pem
+        echo "${{ secrets.WEB_EXT_PRIVATE_KEY }}" > extension.pem
 
     - name: Prepare extension directory
       run: |
