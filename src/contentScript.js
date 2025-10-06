@@ -116,6 +116,25 @@ function createMiniplayerButtonForVideo(video) {
 
     // Initial state update
     updateMiniplayerButtonState(button, video);
+    
+    // Add event listeners to update button position when video metadata loads or size changes
+    const updatePosition = () => updateButtonPositionForVideo(video);
+    
+    video.addEventListener('loadedmetadata', updatePosition);
+    video.addEventListener('loadeddata', updatePosition);
+    video.addEventListener('canplay', updatePosition);
+    video.addEventListener('resize', updatePosition);
+    
+    // Store event listeners for cleanup
+    if (!video.miniplayerEventListeners) {
+        video.miniplayerEventListeners = [];
+    }
+    video.miniplayerEventListeners.push(
+        { event: 'loadedmetadata', handler: updatePosition },
+        { event: 'loadeddata', handler: updatePosition },
+        { event: 'canplay', handler: updatePosition },
+        { event: 'resize', handler: updatePosition }
+    );
 }
 
 // Function to remove miniplayer button for a specific video element
@@ -123,6 +142,14 @@ function removeMiniplayerButtonForVideo(video) {
     if (video.miniplayerButton) {
         video.miniplayerButton.remove();
         video.miniplayerButton = null;
+    }
+    
+    // Clean up event listeners
+    if (video.miniplayerEventListeners) {
+        video.miniplayerEventListeners.forEach(({ event, handler }) => {
+            video.removeEventListener(event, handler);
+        });
+        video.miniplayerEventListeners = null;
     }
 }
 
@@ -132,6 +159,8 @@ function updateButtonPositionForVideo(video) {
     
     let container = video.closest('#movie_player') || video.closest('#player') || video.closest('.html5-video-player') || video.parentNode;
     const rect = container.getBoundingClientRect();
+    
+    // For position: fixed, use viewport coordinates directly
     if (rect.width > 0 && rect.height > 0) {
         video.miniplayerButton.style.left = (rect.left + 5) + 'px';
         video.miniplayerButton.style.top = (rect.top + 5) + 'px';
@@ -195,12 +224,45 @@ function processVideos() {
     updateButtonVisibility();
 }
 
+// Function to clean up all existing buttons and recreate them
+function resetAllButtons() {
+    // Remove all existing buttons
+    document.querySelectorAll('video').forEach(video => {
+        if (video.miniplayerButton) {
+            removeMiniplayerButtonForVideo(video);
+        }
+    });
+    
+    // Wait a bit for DOM to stabilize, then recreate buttons
+    setTimeout(() => {
+        processVideos();
+    }, 100);
+}
+
 // Initial processing
 processVideos();
 
 // Delayed processing for dynamic content
 setTimeout(processVideos, 2000);
 setTimeout(processVideos, 5000);
+
+// Monitor URL changes for SPA navigation (like YouTube video switches)
+let lastUrl = location.href;
+new MutationObserver(() => {
+    const currentUrl = location.href;
+    if (currentUrl !== lastUrl) {
+        lastUrl = currentUrl;
+        console.log('URL changed, resetting miniplayer buttons');
+        
+        // Reset buttons when URL changes (video switch on YouTube)
+        resetAllButtons();
+        
+        // Additional delayed checks for YouTube's dynamic loading
+        setTimeout(resetAllButtons, 500);
+        setTimeout(processVideos, 1000);
+        setTimeout(processVideos, 2000);
+    }
+}).observe(document, { subtree: true, childList: true });
 
 // Observe for changes in the DOM
 const observer = new MutationObserver(function(mutations) {
