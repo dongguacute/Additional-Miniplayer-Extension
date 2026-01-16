@@ -82,6 +82,11 @@ function updateMiniplayerButtonState(button, video) {
     }
 }
 
+// Function to get the container for the video
+function getVideoContainer(video) {
+    return video.closest('#movie_player') || video.closest('#player') || video.closest('.html5-video-player') || video.parentNode;
+}
+
 // Function to create a miniplayer button for a specific video element
 function createMiniplayerButtonForVideo(video) {
     // Check if button already exists for this video
@@ -108,33 +113,15 @@ function createMiniplayerButtonForVideo(video) {
     // Store reference to button on video element
     video.miniplayerButton = button;
 
-    // Add to body
-    document.body.appendChild(button);
-
-    // Position the button near the video
-    updateButtonPositionForVideo(video);
+    // Add to container
+    const container = getVideoContainer(video);
+    if (window.getComputedStyle(container).position === 'static') {
+        container.style.position = 'relative';
+    }
+    container.appendChild(button);
 
     // Initial state update
     updateMiniplayerButtonState(button, video);
-    
-    // Add event listeners to update button position when video metadata loads or size changes
-    const updatePosition = () => updateButtonPositionForVideo(video);
-    
-    video.addEventListener('loadedmetadata', updatePosition);
-    video.addEventListener('loadeddata', updatePosition);
-    video.addEventListener('canplay', updatePosition);
-    video.addEventListener('resize', updatePosition);
-    
-    // Store event listeners for cleanup
-    if (!video.miniplayerEventListeners) {
-        video.miniplayerEventListeners = [];
-    }
-    video.miniplayerEventListeners.push(
-        { event: 'loadedmetadata', handler: updatePosition },
-        { event: 'loadeddata', handler: updatePosition },
-        { event: 'canplay', handler: updatePosition },
-        { event: 'resize', handler: updatePosition }
-    );
 }
 
 // Function to remove miniplayer button for a specific video element
@@ -153,19 +140,6 @@ function removeMiniplayerButtonForVideo(video) {
     }
 }
 
-// Function to update button position for a specific video
-function updateButtonPositionForVideo(video) {
-    if (!video.miniplayerButton || video.miniplayerButton.style.display === 'none') return;
-    
-    let container = video.closest('#movie_player') || video.closest('#player') || video.closest('.html5-video-player') || video.parentNode;
-    const rect = container.getBoundingClientRect();
-    
-    // For position: fixed, use viewport coordinates directly
-    if (rect.width > 0 && rect.height > 0) {
-        video.miniplayerButton.style.left = (rect.left + 5) + 'px';
-        video.miniplayerButton.style.top = (rect.top + 5) + 'px';
-    }
-}
 
 // Function to check if a video element is valid for miniplayer
 function isValidVideoForMiniplayer(video) {
@@ -209,7 +183,6 @@ function updateButtonVisibility() {
             }
             if (video.miniplayerButton) {
                 video.miniplayerButton.style.display = 'flex';
-                updateButtonPositionForVideo(video);
             }
         } else {
             if (video.miniplayerButton) {
@@ -301,18 +274,8 @@ observer.observe(document.body, {
     subtree: true
 });
 
-// Update position on scroll and resize
-window.addEventListener('scroll', processVideos);
+// Update position on resize
 window.addEventListener('resize', processVideos);
-
-// Update position every 0.1 seconds to handle dynamic changes like dragging
-setInterval(() => {
-    document.querySelectorAll('video').forEach(video => {
-        if (video.miniplayerButton && video.miniplayerButton.style.display !== 'none') {
-            updateButtonPositionForVideo(video);
-        }
-    });
-}, 100);
 
 // Listen for Picture-in-Picture state changes to update button states
 document.addEventListener('enterpictureinpicture', (event) => {
